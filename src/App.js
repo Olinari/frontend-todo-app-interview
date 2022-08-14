@@ -1,7 +1,14 @@
 import * as React from "react";
 import "./App.css";
 
-import { getAllTodos, deleteItem, addItem, updateItem } from "./api";
+import {
+  getAllTodos,
+  deleteItem,
+  addItem,
+  updateItem,
+  buildTagMap,
+  applyHierarchicalFilter,
+} from "./api";
 
 const apiKeyLocalStorageKey = "apiKey";
 
@@ -9,30 +16,45 @@ const getNewStatus = (status) => {
   return status === "Todo" ? "Done" : "Todo";
 };
 
-function ToDoItem({ id, status, tags, text, apiKey, updated, setUpdated }) {
+const clear = (input) => {
+  input.value = "";
+};
+
+function ToDoItem({
+  id,
+  status,
+  tags,
+  text,
+  onItemDelete,
+  updateListItem,
+  shouldHide,
+}) {
   const isDone = status === "Done";
   return (
-    <div className="App-todo-item">
+    <div className={`App-todo-item ${shouldHide ? "hide" : "show"}`}>
       <input
         type="checkbox"
         checked={isDone}
         onChange={() => {
-          updateItem(apiKey, id, getNewStatus(status));
-          setUpdated(updated + 1);
+          updateListItem(id, getNewStatus(status));
         }}
       />
-      <span>Id: {id}</span>
-      <span>Status: {status}</span>
-      <span>Tags: {tags}</span>
-      <span>Text: {text}</span>
-      <button
-        onClick={() => {
-          deleteItem(apiKey, id);
-          setUpdated(updated + 1);
+      <span> {text}</span>
+      <span>
+        Tags:
+        {tags.map((tag, i) => [i > 0 && ", ", <span key={i}>{tag}</span>])}
+      </span>
+
+      <input
+        placeholder="Add Tag"
+        onKeyDown={(textEvent) => {
+          if (textEvent.key === "Enter") {
+            updateListItem(id, status, text, [...tags, textEvent.target.value]);
+            clear(textEvent.target);
+          }
         }}
-      >
-        X
-      </button>
+      ></input>
+      <button onClick={() => onItemDelete(id)}>X</button>
     </div>
   );
 }
@@ -41,6 +63,9 @@ function App() {
   const [apiKey, setApiKey] = React.useState("");
   const [todos, setTodos] = React.useState([]);
   const [updated, setUpdated] = React.useState(0);
+  const [newItemText, setNewItemText] = React.useState("");
+  const [tagsStruct, setTagsStruct] = React.useState(buildTagMap(todos));
+  const [filters, setFilters] = React.useState([]);
 
   React.useEffect(() => {
     const apiKeyFromLocalStorage =
@@ -49,7 +74,6 @@ function App() {
 
     if (apiKeyFromLocalStorage) {
       localStorage.setItem(apiKeyLocalStorageKey, apiKeyFromLocalStorage);
-
       setApiKey(apiKeyFromLocalStorage);
     }
   }, []);
@@ -58,8 +82,8 @@ function App() {
     if (apiKey) {
       getAllTodos(apiKey)
         .then((res) => {
-          console.log(res.records);
           setTodos(res.records);
+          setTagsStruct(buildTagMap(res.records));
         })
         .catch((e) => {
           console.error(e);
@@ -67,33 +91,64 @@ function App() {
     }
   }, [apiKey, updated]);
 
+  const onItemDelete = (id) => {
+    deleteItem(apiKey, id);
+    setUpdated(updated + 1);
+  };
+  const updateList = () => {
+    setTagsStruct(todos);
+    setUpdated(updated + 1);
+  };
+  const updateListItem = (id, status, text, tags) => {
+    updateItem(apiKey, id, status, text, tags).then(() => {
+      updateList();
+    });
+  };
+
   return (
     <div className="App">
+      <h1>ToDO App</h1>
       <header className="App-header">
+        <input
+          placeholder="Filter By Tag"
+          onInput={(textEvent) => {
+            setFilters(
+              applyHierarchicalFilter(tagsStruct, textEvent.target.value)
+            );
+          }}
+        ></input>
         <div className="Todo-list">
           {todos.length > 0 ? (
-            todos.map((todo) => (
+            todos.map((todo, index) => (
               <ToDoItem
                 status={todo.fields.Status}
                 id={todo.id}
                 tags={todo.fields.Tags}
                 text={todo.fields.Text}
-                apiKey={apiKey}
-                updated={updated}
-                setUpdated={setUpdated}
+                onItemDelete={onItemDelete}
+                updateListItem={updateListItem}
+                shouldHide={filters[index] === false}
               />
             ))
           ) : (
             <span>No items</span>
           )}
-          <button
-            onClick={() => {
-              addItem(apiKey);
-              setUpdated(updated + 1);
+
+          <input
+            placeholder="Add New Task"
+            onKeyDown={(textEvent) => {
+              if (textEvent.key === "Enter") {
+                addItem(newItemText, apiKey)
+                  .then(() => {
+                    clear(textEvent.target);
+                    setNewItemText("");
+                    updateList();
+                  })
+                  .catch((e) => console.error(e));
+              }
+              setNewItemText(textEvent.target.value);
             }}
-          >
-            Add New
-          </button>
+          ></input>
         </div>
       </header>
     </div>

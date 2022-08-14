@@ -18,7 +18,7 @@ export const getAllTodos = async (apiKey) => {
   return await response.json();
 };
 
-export const addItem = async (apiKey) => {
+export const addItem = async (text, apiKey) => {
   await fetch(URL, {
     method: "POST",
     headers: {
@@ -29,8 +29,8 @@ export const addItem = async (apiKey) => {
         {
           fields: {
             Status: "Todo",
-            Tags: ["tag1"],
-            Text: "task",
+            Tags: [],
+            Text: text,
           },
         },
       ],
@@ -38,7 +38,7 @@ export const addItem = async (apiKey) => {
   });
 };
 
-export const updateItem = async (apiKey, id, Status) => {
+export const updateItem = async (apiKey, id, Status, Text, Tags) => {
   await fetch(URL, {
     method: "PATCH",
     headers: {
@@ -50,9 +50,56 @@ export const updateItem = async (apiKey, id, Status) => {
           id,
           fields: {
             Status,
+            Tags,
+            Text,
           },
         },
       ],
     }),
   });
 };
+
+export function buildTagMap(todos) {
+  function createHirarchy(tag) {
+    const heirarchy = {
+      name: tag.split("::")[0],
+      children: tag.split("::")[1] && createHirarchy(tag.split("::")[1]),
+    };
+    return heirarchy;
+  }
+  function buildTagsStructure(tags) {
+    const tagsStructure = [];
+    tags.forEach((tag) => {
+      tagsStructure.push(createHirarchy(tag));
+    });
+    return tagsStructure;
+  }
+  const tagMap = [];
+  todos.forEach((todo) => {
+    if (todo.fields.Tags) tagMap.push(buildTagsStructure(todo.fields.Tags));
+  });
+  return tagMap;
+}
+
+export function applyHierarchicalFilter(data, filter) {
+  console.log(data, filter);
+  const result = [];
+
+  function shouldDisplayitem(item) {
+    if (item.name.includes(filter)) {
+      console.log("name", item.name, "filter", filter);
+      return true;
+    }
+    if (!item.children) {
+      return false;
+    }
+    return shouldDisplayitem(item.children);
+  }
+
+  data.forEach((item, index) => {
+    item.forEach((tag) => {
+      result[index] = shouldDisplayitem(tag);
+    });
+  });
+  return result;
+}
