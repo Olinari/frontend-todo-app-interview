@@ -60,23 +60,25 @@ export const updateItem = async (apiKey, id, Status, Text, Tags) => {
 };
 
 export function buildTagMap(todos) {
-  function createHirarchy(tag) {
+  const createHirarchy = (tag) => {
     const heirarchy = {
       name: tag.split("::")[0],
       children: tag.split("::")[1] && createHirarchy(tag.split("::")[1]),
     };
     return heirarchy;
-  }
-  function buildTagsStructure(tags) {
+  };
+  const buildTagsStructure = (tags) => {
     const tagsStructure = [];
     tags.forEach((tag) => {
       tagsStructure.push(createHirarchy(tag));
     });
     return tagsStructure;
-  }
+  };
   const tagMap = [];
   todos.forEach((todo) => {
-    if (todo.fields.Tags) tagMap.push(buildTagsStructure(todo.fields.Tags));
+    if (todo.fields.Tags) {
+      tagMap.push(buildTagsStructure(todo.fields.Tags));
+    }
   });
   return tagMap;
 }
@@ -84,7 +86,7 @@ export function buildTagMap(todos) {
 export function applyHierarchicalFilter(data, filter) {
   const result = [];
 
-  function shouldDisplayitem(item) {
+  const shouldDisplayitem = (item) => {
     if (item.name.includes(filter)) {
       return true;
     }
@@ -92,7 +94,7 @@ export function applyHierarchicalFilter(data, filter) {
       return false;
     }
     return shouldDisplayitem(item.children);
-  }
+  };
 
   data.forEach((item, index) => {
     item.forEach((tag) => {
