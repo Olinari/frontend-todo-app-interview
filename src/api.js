@@ -85,7 +85,9 @@ export function buildTagMap(todos) {
 
 export function applyHierarchicalFilter(data, filter) {
   const result = [];
-
+  if (!filter || filter === "") {
+    return [];
+  }
   const shouldDisplayitem = (item) => {
     if (item.name.includes(filter)) {
       return true;
@@ -101,5 +103,6 @@ export function applyHierarchicalFilter(data, filter) {
       result[index] = shouldDisplayitem(tag);
     });
   });
+  console.log(result);
   return result;
 }

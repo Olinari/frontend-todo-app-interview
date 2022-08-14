@@ -31,7 +31,7 @@ function ToDoItem({
 }) {
   const isDone = status === "Done";
   return (
-    <div className={`App-todo-item ${shouldHide ? "hide" : "show"}`}>
+    <div className={`App-todo-item ${shouldHide ? "hide" : ""}`}>
       <input
         type="checkbox"
         checked={isDone}
@@ -119,17 +119,22 @@ function App() {
         ></input>
         <div className="Todo-list">
           {todos.length > 0 ? (
-            todos.map((todo, index) => (
-              <ToDoItem
-                status={todo.fields.Status}
-                id={todo.id}
-                tags={todo.fields.Tags}
-                text={todo.fields.Text}
-                onItemDelete={onItemDelete}
-                updateListItem={updateListItem}
-                shouldHide={filters[index] === false}
-              />
-            ))
+            todos.map((todo, index) => {
+              return (
+                <ToDoItem
+                  status={todo.fields.Status}
+                  id={todo.id}
+                  tags={todo.fields.Tags}
+                  text={todo.fields.Text}
+                  onItemDelete={onItemDelete}
+                  updateListItem={updateListItem}
+                  shouldHide={
+                    filters.length > 0 &&
+                    (filters[index] === false || todo.fields.Tags.length === 0)
+                  }
+                />
+              );
+            })
           ) : (
             <span>No items</span>
           )}
