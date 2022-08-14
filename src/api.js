@@ -103,6 +103,5 @@ export function applyHierarchicalFilter(data, filter) {
       result[index] = shouldDisplayItem(tag);
     });
   });
-  console.log(result);
   return result;
 }
