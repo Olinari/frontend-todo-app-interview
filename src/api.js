@@ -82,12 +82,10 @@ export function buildTagMap(todos) {
 }
 
 export function applyHierarchicalFilter(data, filter) {
-  console.log(data, filter);
   const result = [];
 
   function shouldDisplayitem(item) {
     if (item.name.includes(filter)) {
-      console.log("name", item.name, "filter", filter);
       return true;
     }
     if (!item.children) {
