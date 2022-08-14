@@ -141,7 +141,7 @@ function App() {
 
           <input
             placeholder="Add New Task"
-            onKeyDown={(textEvent) => {
+            onKeyUp={(textEvent) => {
               if (textEvent.key === "Enter") {
                 addItem(newItemText, apiKey)
                   .then(() => {
