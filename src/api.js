@@ -88,19 +88,19 @@ export function applyHierarchicalFilter(data, filter) {
   if (!filter || filter === "") {
     return [];
   }
-  const shouldDisplayitem = (item) => {
+  const shouldDisplayItem = (item) => {
     if (item.name.includes(filter)) {
       return true;
     }
     if (!item.children) {
       return false;
     }
-    return shouldDisplayitem(item.children);
+    return shouldDisplayItem(item.children);
   };
 
   data.forEach((item, index) => {
     item.forEach((tag) => {
-      result[index] = shouldDisplayitem(tag);
+      result[index] = shouldDisplayItem(tag);
     });
   });
   console.log(result);
